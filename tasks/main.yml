@@ -29,6 +29,9 @@
 - name: Install packages for RompЯ
   apt:
     name: "{{ item }}"
+  register: apt_result
+  retries: 5
+  until: apt_result | success
   with_items:
     - "nginx"
     - "php-curl"
@@ -40,8 +43,7 @@
     - "php-fpm"
     - "imagemagick"
 
-
-- name: Change NginX config
+- name: Change NginX config IPV4
   lineinfile:
     path: /etc/nginx/sites-available/default
     regexp: '^\s*listen 80 default'
@@ -50,6 +52,8 @@
     owner: root
     group: root
     mode: 0644
+
+- name: Change NginX config IPV6
   lineinfile:
     path: /etc/nginx/sites-available/default
     regexp: '^\s*listen \[::\]:80 default'
@@ -77,15 +81,19 @@
     path: /etc/hosts
     line: 127.0.0.1       www.myrompr.net
 
-- name: Change php.ini
+- name: Change php.ini 1
   lineinfile:
     path: "/etc/php/{{ php_version }}/fpm/php.ini"
     regexp: '^\s*allow_url_fopen'
     line: 'allow_url_fopen = On'
+
+- name: Change php.ini 2
   lineinfile:
     path: "/etc/php/{{ php_version }}/fpm/php.ini"
     regexp: '^\s*memory_limit'
     line: 'memory_limit = 128M'
+
+- name: Change php.ini 3
   lineinfile:
     path: "/etc/php/{{ php_version }}/fpm/php.ini"
     regexp: '^\s*max_execution_time'
