@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: Joakim Lindbom
+  description: Install RompЯ web front-end to mpd on Raspberry Pi
+  company:
+  license: GPLv2
+  min_ansible_version: 1.9
+  platforms:
+  - name: Debian
+    versions:
+    - wheezy
+    - jessie
+  galaxy_tags:
+  - debian
+  - mpd
+  - musicpd
+  - music
+dependencies: []
+

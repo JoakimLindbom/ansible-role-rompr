@@ -1,0 +1,5 @@
+rompr_version: "1.24"
+base_dir: "/home/pi"
+rompr_dir: "{{ base_dir }}/rompr"
+
+php_version: '7.2'

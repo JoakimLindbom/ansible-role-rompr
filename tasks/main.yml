@@ -1,0 +1,99 @@
+---
+- name: Download RompЯ
+  get_url: url=https://github.com/fatg3erman/RompR/releases/download/{{ rompr_version }}/rompr-{{ rompr_version }}.zip
+    dest={{ base_dir }}/rompr-{{ rompr_version }}.zip
+
+- name: Create installation directory
+  file:
+    path: "{{ rompr_dir }}"
+    state: directory
+    mode: 0755
+
+- name: Extract and install RompЯ
+  unarchive:
+    src={{ base_dir }}/rompr-{{ rompr_version }}.zip
+    dest="{{ base_dir }}"
+    copy=no
+
+- name: Creates sub-directories
+  file:
+    path: "{{ rompr_dir }}{{ item }}"
+    state: directory
+    mode: 0755
+    owner: www-data
+    group: www-data
+  with_items:
+    - /prefs
+    - /albumart
+
+- name: Install packages for RompЯ
+  apt:
+    name: "{{ item }}"
+  with_items:
+    - "nginx"
+    - "php-curl"
+    - "php-sqlite3"
+    - "php-gd"
+    - "php-json"
+    - "php-xml"
+    - "php-mbstring"
+    - "php-fpm"
+    - "imagemagick"
+
+
+- name: Change NginX config
+  lineinfile:
+    path: /etc/nginx/sites-available/default
+    regexp: '^\s*listen 80 default'
+    backrefs: True
+    line: "\tlisten 80;"
+    owner: root
+    group: root
+    mode: 0644
+  lineinfile:
+    path: /etc/nginx/sites-available/default
+    regexp: '^\s*listen \[::\]:80 default'
+    backrefs: True
+    line: "\tlisten [::]:80;"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Copy RompЯ site definition
+  template:
+    src: "rompr_site.j2"
+    dest: "/etc/nginx/sites-available/rompr"
+  notify: restart nginx
+
+- name: Create symbolic link
+  file:
+    src: "/etc/nginx/sites-available/rompr"
+    dest: "/etc/nginx/sites-enabled/rompr"
+    state: link
+  notify: restart nginx
+
+- name: Add to host file
+  lineinfile:
+    path: /etc/hosts
+    line: 127.0.0.1       www.myrompr.net
+
+- name: Change php.ini
+  lineinfile:
+    path: "/etc/php/{{ php_version }}/fpm/php.ini"
+    regexp: '^\s*allow_url_fopen'
+    line: 'allow_url_fopen = On'
+  lineinfile:
+    path: "/etc/php/{{ php_version }}/fpm/php.ini"
+    regexp: '^\s*memory_limit'
+    line: 'memory_limit = 128M'
+  lineinfile:
+    path: "/etc/php/{{ php_version }}/fpm/php.ini"
+    regexp: '^\s*max_execution_time'
+    line: 'max_execution_time = 1800'
+  notify: restart php-fpm
+
+- name: Add timeout to mpd
+  lineinfile:
+    path: /etc/mpd.conf
+    line: connection_timeout     "120"
+  notify: restart mpd

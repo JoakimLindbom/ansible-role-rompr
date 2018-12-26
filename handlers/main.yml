@@ -1,0 +1,15 @@
+---
+- name: restart mpd
+  service:
+    name: "mpd"
+    state: "restarted"
+
+- name: restart nginx
+  service:
+    name: "nginx"
+    state: "restarted"
+
+- name: restart php-fpm
+  service:
+    name: "php{{ php_version }}-fpm"
+    state: "restarted"
